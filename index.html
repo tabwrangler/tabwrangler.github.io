@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tab Wrangler</title>
+    <meta
+      name="description"
+      content="Tab Wrangler is a free extension for Chrome and Firefox that closes tabs you haven't used in a while and makes it easy to get them back."
+    />
+    <link rel="icon" href="icon.png" />
+    <script>
+      // Follow the system theme, like the extension's "System" theme setting.
+      const darkQuery = matchMedia("(prefers-color-scheme: dark)");
+      const applyTheme = () =>
+        document.documentElement.setAttribute("data-bs-theme", darkQuery.matches ? "dark" : "light");
+      applyTheme();
+      darkQuery.addEventListener("change", applyTheme);
+    </script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <style>
+      :root,
+      [data-bs-theme] {
+        --line: var(--bs-emphasis-color);
+        --paper: #fff;
+      }
+
+      [data-bs-theme="dark"] {
+        --paper: var(--bs-body-bg);
+      }
+
+      body {
+        overflow-x: hidden;
+      }
+
+      section {
+        padding: 5rem 0;
+      }
+
+      .min-w-0 {
+        min-width: 0;
+      }
+
+      .lead {
+        max-width: 36em;
+      }
+
+      /* Doodles: thick outlines that follow the theme's text color */
+
+      .doodle {
+        display: block;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+      }
+
+      .tube {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .ln,
+      .doodle [stroke="#000"] {
+        stroke: var(--line);
+      }
+
+      .lf,
+      .doodle [fill="#000"],
+      .doodle circle:not([fill]) {
+        fill: var(--line);
+      }
+
+      .doodle [fill="#fff"] {
+        fill: var(--paper);
+      }
+
+      .doodle .paper {
+        stroke: var(--bs-body-bg);
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .throw {
+          stroke-dasharray: 1;
+          stroke-dashoffset: 1;
+          animation: throw 350ms ease-out 250ms forwards;
+        }
+
+        .throw.loop {
+          animation-delay: 550ms;
+          animation-duration: 700ms;
+        }
+
+        .pop {
+          transform-box: fill-box;
+          transform-origin: 50% 100%;
+          transform: scale(0);
+          animation: pop 520ms cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
+        }
+
+        .pop:nth-of-type(1) {
+          animation-delay: 1250ms;
+        }
+        .pop:nth-of-type(2) {
+          animation-delay: 1380ms;
+        }
+        .pop:nth-of-type(3) {
+          animation-delay: 1510ms;
+        }
+        .pop:nth-of-type(4) {
+          animation-delay: 1640ms;
+        }
+        .pop:nth-of-type(5) {
+          animation-delay: 1770ms;
+        }
+
+        .buzz {
+          opacity: 0;
+          animation: buzz 300ms steps(2) 1900ms forwards;
+        }
+      }
+
+      @keyframes throw {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      @keyframes pop {
+        to {
+          transform: scale(1);
+        }
+      }
+
+      @keyframes buzz {
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* Steps */
+
+      .step {
+        border-width: 2px;
+      }
+
+      .step-art {
+        padding: 1.5rem 1.5rem 1rem;
+        border-bottom: 2px solid var(--bs-border-color);
+      }
+
+      .step-warning {
+        /* Darker than Bootstrap's yellow so white lines and fills keep at least 3:1 */
+        background: #b38605;
+      }
+      .step-danger {
+        background: var(--bs-danger);
+      }
+      .step-success {
+        background: var(--bs-success);
+      }
+      .step-primary {
+        background: var(--bs-primary);
+      }
+
+      .step-num {
+        position: absolute;
+        top: -0.9rem;
+        left: -0.9rem;
+        display: grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        background: var(--line);
+        color: var(--bs-body-bg);
+        font-weight: 700;
+      }
+
+      /* Product replicas: the extension's own Bootstrap UI in an outlined window */
+
+      .mock-wrap {
+        position: relative;
+      }
+
+      .mock {
+        border: 3px solid var(--line);
+        border-radius: 1rem;
+        overflow: hidden;
+        background: var(--bs-body-bg);
+        font-size: 0.875rem;
+      }
+
+      .mock .nav-tabs {
+        padding: 0.5rem 0.5rem 0;
+        flex-wrap: nowrap;
+      }
+
+      .mock .nav-link {
+        padding: 0.4rem 0.75rem;
+        white-space: nowrap;
+      }
+
+      .mock .nav-link:not(.active) {
+        color: var(--bs-link-color);
+      }
+
+      .fav {
+        flex: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+      }
+
+      .rule-badge {
+        flex: none;
+        width: 5em;
+        text-align: center;
+      }
+
+      .day {
+        display: grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        font-weight: 500;
+        border: 1px solid var(--bs-secondary);
+        color: var(--bs-secondary-color);
+      }
+
+      .day.on {
+        background: var(--bs-secondary);
+        color: #fff;
+      }
+
+      .ticks {
+        position: absolute;
+        width: 44px;
+        height: 44px;
+        pointer-events: none;
+      }
+
+      .ticks.tl {
+        top: -34px;
+        left: -30px;
+      }
+
+      .ticks.br {
+        right: -30px;
+        bottom: -34px;
+        transform: rotate(180deg);
+      }
+
+      /* Feature cards */
+
+      .feature-card {
+        border-width: 2px;
+      }
+
+      .blob {
+        position: relative;
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 3.25rem;
+        height: 3.25rem;
+        border: 3px solid var(--line);
+        border-radius: 50%;
+        color: #000;
+        font-size: 1.25rem;
+      }
+
+      .blob .ticks {
+        top: -20px;
+        right: -22px;
+        width: 26px;
+        height: 26px;
+        transform: rotate(90deg);
+      }
+
+      .guard {
+        max-width: 340px;
+      }
+
+      /* Closing panel */
+
+      .chalk {
+        filter: url(#chalk);
+      }
+
+      .get footer a {
+        color: var(--bs-body-color);
+      }
+
+      @media (max-width: 575.98px) {
+        section {
+          padding: 3.5rem 0;
+        }
+
+        .ticks.tl,
+        .ticks.br {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true">
+      <defs>
+        <symbol id="tab" viewBox="0 0 112 90" overflow="visible">
+          <path
+            class="ln"
+            d="M6 62 L16 12 Q18 4 26 4 L86 4 Q94 4 96 12 L106 62 Z"
+            fill="currentColor"
+            stroke-width="7"
+            stroke-linejoin="round"
+          />
+          <circle class="lf" cx="32" cy="28" r="7" />
+          <path class="ln" d="M68 22 l14 14 M82 22 l-14 14" stroke-width="6" stroke-linecap="round" />
+          <path class="ln" d="M34 66 L28 86 M78 66 L84 86" stroke-width="8" stroke-linecap="round" />
+        </symbol>
+        <symbol id="tick-marks" viewBox="0 0 44 44">
+          <path
+            class="ln"
+            d="M8 36 L2 30 M20 30 L14 18 M34 24 L32 10"
+            fill="none"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <filter id="chalk" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="4" />
+          <feDisplacementMap in="SourceGraphic" scale="4" />
+        </filter>
+      </defs>
+    </svg>
+
+    <nav class="navbar navbar-expand bg-body border-bottom">
+      <div class="container">
+        <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold" href="#">
+          <img src="icon.png" alt="" width="32" height="32" class="rounded" />
+          Tab Wrangler
+        </a>
+        <ul class="navbar-nav ms-auto align-items-center gap-2">
+          <li class="nav-item d-none d-md-block"><a class="nav-link" href="#how">How it works</a></li>
+          <li class="nav-item d-none d-md-block">
+            <a class="nav-link" href="https://github.com/tabwrangler/tabwrangler">Source code</a>
+          </li>
+          <li class="nav-item"><a class="btn btn-primary" href="#get">Get Tab Wrangler</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <header class="py-5">
+      <div class="container py-lg-4">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">Round up the tabs you forgot about.</h1>
+            <p class="lead mb-4">
+              Tab Wrangler is a free extension for Chrome and Firefox. When a tab sits untouched for
+              a while, it closes the tab and keeps it in a list, so you can bring it back with one
+              click.
+            </p>
+            <div class="stores d-flex flex-wrap gap-2">
+              <a
+                class="btn btn-primary btn-lg"
+                data-store="chrome"
+                href="https://chromewebstore.google.com/detail/tab-wrangler/egnjhciaieeiiohknchakcodbpgjnchh"
+                ><i class="fa-brands fa-chrome me-2"></i>Add to Chrome</a
+              >
+              <a
+                class="btn btn-secondary btn-lg"
+                data-store="firefox"
+                href="https://addons.mozilla.org/firefox/addon/tabwrangler/"
+                ><i class="fa-brands fa-firefox-browser me-2"></i>Add to Firefox</a
+              >
+            </div>
+            <p class="small text-body-secondary mt-3 mb-0">
+              Free and open source. No account, no tracking.
+            </p>
+          </div>
+
+          <div class="col-lg-6">
+            <svg
+              class="doodle mx-auto"
+              style="max-width: 560px"
+              viewBox="40 0 600 500"
+              role="img"
+              aria-label="A browser tab in a cowboy hat swings a lasso over a herd of tabs running away."
+            >
+              <g class="pop">
+                <use href="#tab" x="352" y="222" width="104" height="84" style="color: var(--bs-primary)" transform="rotate(8 404 264)" />
+              </g>
+              <g class="pop">
+                <use href="#tab" x="500" y="208" width="104" height="84" style="color: var(--bs-success)" transform="rotate(12 552 250)" />
+              </g>
+              <g class="pop">
+                <use href="#tab" x="420" y="326" width="104" height="84" style="color: var(--paper)" transform="rotate(6 472 368)" />
+              </g>
+              <g class="pop">
+                <use href="#tab" x="540" y="340" width="96" height="77" style="color: var(--bs-pink)" transform="rotate(10 588 378)" />
+              </g>
+              <g class="pop">
+                <use href="#tab" x="330" y="418" width="92" height="74" style="color: var(--bs-orange)" transform="rotate(4 376 455)" />
+              </g>
+
+              <!-- the wrangler: a tab in a hat -->
+              <path class="tube" stroke="#000" stroke-width="13" d="M128 334 L114 382 M232 334 L264 370 M96 262 L60 282 M262 252 L300 222 L318 160" />
+              <path d="M80 330 L104 214 Q108 200 122 200 L238 200 Q252 200 256 214 L280 330 Z" style="fill: var(--bs-danger)" stroke="#000" stroke-width="9" stroke-linejoin="round" />
+              <circle cx="132" cy="250" r="12" />
+              <path class="tube" stroke="#000" stroke-width="10" d="M206 238 l24 24 M230 238 l-24 24" />
+              <path d="M132 196 Q126 146 150 142 Q180 154 210 142 Q234 146 228 196 Z" style="fill: var(--bs-warning)" stroke="#000" stroke-width="9" stroke-linejoin="round" />
+              <path class="tube" stroke="#000" stroke-width="26" d="M84 184 Q180 222 276 184" />
+              <path class="tube" style="stroke: var(--bs-warning)" stroke-width="10" d="M84 184 Q180 222 276 184" />
+
+              <g transform="rotate(-6 440 84)">
+                <path class="tube throw" stroke="#000" stroke-width="22" pathLength="1" d="M318 160 C 326 130, 318 112, 330 96" />
+                <path class="tube throw paper" stroke-width="10" pathLength="1" d="M318 160 C 326 130, 318 112, 330 96" />
+                <path class="tube throw loop" stroke="#000" stroke-width="22" pathLength="1" d="M322 84 A118 34 0 1 1 558 84 A118 34 0 1 1 322 84" />
+                <path class="tube throw loop paper" stroke-width="10" pathLength="1" d="M322 84 A118 34 0 1 1 558 84 A118 34 0 1 1 322 84" />
+              </g>
+
+              <g class="tube buzz" stroke="#000" stroke-width="8">
+                <path d="M338 240 h-20 M334 258 h-24 M338 276 h-18" />
+                <path d="M486 226 h-20 M482 244 h-24 M486 262 h-16" />
+                <path d="M406 344 h-20 M402 362 h-24 M406 380 h-16" />
+                <path d="M316 436 h-20 M312 454 h-22" />
+                <path d="M578 52 l18 -8 M584 80 l20 2 M300 50 l-16 -10" />
+                <path d="M72 200 l-16 -12 M62 232 l-20 -4" />
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="bg-body-tertiary border-top border-bottom" id="how">
+        <div class="container">
+          <h2 class="display-6 fw-bold mb-5">What happens to a tab you forget</h2>
+          <ol class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4 list-unstyled mb-0">
+            <li class="col">
+              <div class="card step h-100 position-relative">
+                <span class="step-num">1</span>
+                <div class="step-art step-warning rounded-top">
+                  <svg class="doodle" viewBox="0 0 240 180" aria-hidden="true">
+                    <use href="#tab" x="14" y="62" width="104" height="84" style="color: var(--paper)" />
+                    <path d="M168 36 L168 112 L186 96 L198 124 L214 117 L202 90 L226 88 Z" style="fill: var(--bs-primary)" stroke="#000" stroke-width="7" stroke-linejoin="round" />
+                    <path class="tube" stroke="#000" stroke-width="6" d="M150 60 h-14 M146 80 h-18 M150 100 h-12" />
+                  </svg>
+                </div>
+                <div class="card-body">
+                  <p class="card-text">You open a tab, then forget all about it.</p>
+                </div>
+              </div>
+            </li>
+            <li class="col">
+              <div class="card step h-100 position-relative">
+                <span class="step-num">2</span>
+                <div class="step-art step-danger rounded-top">
+                  <svg class="doodle" viewBox="0 0 240 180" aria-hidden="true">
+                    <circle cx="120" cy="46" r="28" fill="#fff" stroke="#000" stroke-width="7" />
+                    <path class="tube" stroke="#000" stroke-width="6" d="M120 46 V28 M120 46 L134 54" />
+                    <path class="tube" stroke="#000" stroke-width="6" d="M120 9 V1 M152 28 l8 -5 M88 28 l-8 -5 M157 46 h10 M83 46 h-10" />
+                    <use href="#tab" x="66" y="86" width="108" height="87" style="color: var(--paper)" />
+                  </svg>
+                </div>
+                <div class="card-body">
+                  <p class="card-text">
+                    After an hour without a visit, it goes stale. You choose how long that takes.
+                  </p>
+                </div>
+              </div>
+            </li>
+            <li class="col">
+              <div class="card step h-100 position-relative">
+                <span class="step-num">3</span>
+                <div class="step-art step-success rounded-top">
+                  <svg class="doodle" viewBox="0 0 240 180" aria-hidden="true">
+                    <use href="#tab" x="66" y="44" width="108" height="87" style="color: var(--paper)" />
+                    <path class="tube" stroke="#000" stroke-width="20" d="M42 96 V170 M120 96 V170 M198 96 V170 M30 118 H210 M30 148 H210" />
+                    <path class="tube" style="stroke: var(--bs-orange)" stroke-width="9" d="M42 96 V170 M120 96 V170 M198 96 V170 M30 118 H210 M30 148 H210" />
+                  </svg>
+                </div>
+                <div class="card-body">
+                  <p class="card-text">Tab Wrangler closes it and saves it in the Tab Corral.</p>
+                </div>
+              </div>
+            </li>
+            <li class="col">
+              <div class="card step h-100 position-relative">
+                <span class="step-num">4</span>
+                <div class="step-art step-primary rounded-top">
+                  <svg class="doodle" viewBox="0 0 240 180" aria-hidden="true">
+                    <use href="#tab" x="62" y="10" width="108" height="87" style="color: var(--paper)" transform="rotate(-6 116 54)" />
+                    <path d="M150 98 L150 166 L166 152 L177 176 L191 170 L180 146 L202 144 Z" style="fill: var(--bs-pink)" stroke="#000" stroke-width="7" stroke-linejoin="round" />
+                    <path class="tube" stroke="#000" stroke-width="6" d="M136 96 l-12 -6 M142 84 l-4 -12 M160 86 l6 -10 M48 24 l-14 -6 M44 50 h-16 M190 24 l14 -6 M194 50 h16" />
+                  </svg>
+                </div>
+                <div class="card-body">
+                  <p class="card-text">Click it in the Corral to get it back.</p>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <div class="row align-items-center g-5">
+            <div class="col-lg-5">
+              <h2 class="display-6 fw-bold mb-3">Nothing gets lost</h2>
+              <p class="lead">
+                Every tab Tab Wrangler closes goes to the Tab Corral. Search it by title or address,
+                sort it by when tabs closed or which site they came from, and restore one tab or a
+                whole handful at once. Changed your mind? Undo.
+              </p>
+              <p class="mb-0">
+                Tabs marked with <i class="fa-solid fa-leaf text-success"></i> come back with their
+                back-button history and scroll position. Your browser keeps that for the last 25
+                tabs closed.
+              </p>
+            </div>
+            <div class="col-lg-7">
+              <div class="mock-wrap">
+                <svg class="ticks tl" aria-hidden="true"><use href="#tick-marks" /></svg>
+                <div class="mock shadow-sm" inert>
+                  <ul class="nav nav-tabs">
+                    <li class="nav-item"><span class="nav-link active">Tab Corral</span></li>
+                    <li class="nav-item"><span class="nav-link">Tab Lock</span></li>
+                    <li class="nav-item d-none d-sm-block"><span class="nav-link">Options</span></li>
+                    <li class="nav-item d-none d-md-block"><span class="nav-link">About</span></li>
+                    <li class="ms-auto d-none d-sm-flex gap-1 align-items-center pb-1">
+                      <span class="btn btn-sm btn-secondary">Wrangle Now</span>
+                      <span class="btn btn-sm btn-secondary"><i class="fa-solid fa-pause"></i> Pause</span>
+                    </li>
+                  </ul>
+                  <div class="p-3">
+                    <div class="row g-2 align-items-center mb-2">
+                      <div class="col-7">
+                        <input class="form-control form-control-sm" placeholder="Search tabs..." />
+                      </div>
+                      <div class="col-5 text-end text-body-secondary">
+                        tabs wrangled: 1,204 (38%)
+                      </div>
+                    </div>
+                    <div class="list-group list-group-flush border-top">
+                      <div class="list-group-item d-flex align-items-center gap-2 px-1">
+                        <input type="checkbox" class="form-check-input m-0" />
+                        <span class="fav" style="background: var(--bs-orange)"></span>
+                        <span class="flex-fill text-truncate min-w-0">Cast-iron skillet care, explained</span>
+                        <small class="text-body-secondary text-nowrap">12 minutes ago</small>
+                        <i class="fa-solid fa-leaf text-success"></i>
+                      </div>
+                      <div class="list-group-item d-flex align-items-center gap-2 px-1">
+                        <input type="checkbox" class="form-check-input m-0" checked />
+                        <span class="fav" style="background: var(--bs-primary)"></span>
+                        <span class="flex-fill text-truncate min-w-0">Weekend forecast for the coast</span>
+                        <small class="text-body-secondary text-nowrap">an hour ago</small>
+                        <i class="fa-solid fa-leaf text-success"></i>
+                      </div>
+                      <div class="list-group-item d-flex align-items-center gap-2 px-1">
+                        <input type="checkbox" class="form-check-input m-0" />
+                        <span class="fav" style="background: var(--bs-pink)"></span>
+                        <span class="flex-fill text-truncate min-w-0">Is a hot dog a sandwich? A long thread</span>
+                        <small class="text-body-secondary text-nowrap">3 hours ago</small>
+                        <i class="fa-solid fa-leaf invisible"></i>
+                      </div>
+                      <div class="list-group-item d-flex align-items-center gap-2 px-1">
+                        <input type="checkbox" class="form-check-input m-0" />
+                        <span class="fav" style="background: var(--bs-success)"></span>
+                        <span class="flex-fill text-truncate min-w-0">Used bikes under $300</span>
+                        <small class="text-body-secondary text-nowrap">a day ago</small>
+                        <i class="fa-solid fa-leaf invisible"></i>
+                      </div>
+                      <div class="list-group-item d-flex align-items-center gap-2 px-1">
+                        <input type="checkbox" class="form-check-input m-0" />
+                        <span class="fav" style="background: var(--bs-warning)"></span>
+                        <span class="flex-fill text-truncate min-w-0">How to fold a fitted sheet</span>
+                        <small class="text-body-secondary text-nowrap">2 days ago</small>
+                        <i class="fa-solid fa-leaf invisible"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-body-tertiary border-top border-bottom">
+        <div class="container">
+          <div class="row align-items-center g-5">
+            <div class="col-lg-5 order-lg-2">
+              <h2 class="display-6 fw-bold mb-3">You decide what stays open</h2>
+              <p class="lead">
+                Tab Rules are checked from top to bottom, and the first one that fits a tab decides
+                what happens to it. Match on a tab's address, title, or tab group name, or on
+                whether it's pinned or playing audio. Then lock it, or give it a time limit of its
+                own.
+              </p>
+              <p class="mb-0">
+                Out of the box, pinned tabs and tabs playing audio stay open, and so does the tab
+                you're looking at.
+              </p>
+            </div>
+            <div class="col-lg-7 order-lg-1">
+              <div class="mock-wrap">
+                <svg class="ticks br" aria-hidden="true"><use href="#tick-marks" /></svg>
+                <div class="mock shadow-sm p-3" inert>
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <h3 class="h5 mb-0">Tab Rules</h3>
+                    <span class="btn btn-sm btn-secondary"><i class="fa-solid fa-plus"></i> Add rule</span>
+                  </div>
+                  <p class="text-body-secondary small">
+                    Rules are checked top to bottom. Tabs are only handled by the first rule they
+                    match.
+                  </p>
+                  <div class="list-group">
+                    <div class="list-group-item d-flex align-items-center gap-2 flex-wrap">
+                      <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis rule-badge">IF</span>
+                      <span class="flex-fill"><i class="fa-solid fa-thumbtack"></i> Pinned</span>
+                      <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">THEN</span>
+                      <span><i class="fa-solid fa-lock"></i> Lock tab</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center gap-2 flex-wrap">
+                      <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis rule-badge">ELSE IF</span>
+                      <span class="flex-fill"><i class="fa-solid fa-volume-high"></i> Playing audio</span>
+                      <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">THEN</span>
+                      <span><i class="fa-solid fa-lock"></i> Lock tab</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center gap-2 flex-wrap">
+                      <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis rule-badge">ELSE IF</span>
+                      <span class="flex-fill">URL includes <code>calendar</code></span>
+                      <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">THEN</span>
+                      <span><i class="fa-solid fa-lock"></i> Lock tab</span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center gap-2 flex-wrap">
+                      <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis rule-badge">ELSE IF</span>
+                      <span class="flex-fill">Tab group name includes <code>Trip</code></span>
+                      <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis">THEN</span>
+                      <span>Stale after <code>3 days</code></span>
+                    </div>
+                    <div class="list-group-item d-flex align-items-center gap-2 bg-body-tertiary">
+                      <span class="badge rounded-pill bg-secondary-subtle text-secondary-emphasis rule-badge">ELSE</span>
+                      <span>Mark tab stale after inactive for <code>1 hour</code></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <div class="row align-items-center g-5">
+            <div class="col-lg-5">
+              <h2 class="display-6 fw-bold mb-3">Only on the clock</h2>
+              <p class="lead mb-0">
+                Choose the days and hours Tab Wrangler runs. Outside them, every timer stops, so a
+                weekend away doesn't cost you the tabs you left open on Friday.
+              </p>
+            </div>
+            <div class="col-lg-7">
+              <div class="mock-wrap">
+                <svg class="ticks tl" aria-hidden="true"><use href="#tick-marks" /></svg>
+                <div class="mock shadow-sm p-3" inert>
+                  <h3 class="h5 mb-1">Active Hours</h3>
+                  <p class="text-body-secondary small">
+                    Tab timers count down and tabs are auto-closed only during these hours.
+                  </p>
+                  <div class="d-flex gap-2 mb-3">
+                    <span class="day">S</span><span class="day on">M</span><span class="day on">T</span
+                    ><span class="day on">W</span><span class="day on">T</span><span class="day on">F</span
+                    ><span class="day">S</span>
+                  </div>
+                  <div class="list-group">
+                    <div class="list-group-item d-flex align-items-center gap-2">
+                      <span class="flex-fill">Monday</span>
+                      <span class="form-select form-select-sm w-auto">12:00 AM</span>
+                      <span>to</span>
+                      <span class="form-select form-select-sm w-auto">Midnight</span>
+                      <span class="form-check mb-0 ms-2 d-none d-sm-block"
+                        ><input checked class="form-check-input" type="checkbox" /><span class="form-check-label">All day</span></span
+                      >
+                    </div>
+                    <div class="list-group-item d-flex align-items-center gap-2">
+                      <span class="flex-fill">Tuesday</span>
+                      <span class="form-select form-select-sm w-auto">12:00 AM</span>
+                      <span>to</span>
+                      <span class="form-select form-select-sm w-auto">Midnight</span>
+                      <span class="form-check mb-0 ms-2 d-none d-sm-block"
+                        ><input checked class="form-check-input" type="checkbox" /><span class="form-check-label">All day</span></span
+                      >
+                    </div>
+                    <div class="list-group-item d-flex align-items-center gap-2">
+                      <span class="flex-fill">Wednesday</span>
+                      <span class="form-select form-select-sm w-auto">12:00 AM</span>
+                      <span>to</span>
+                      <span class="form-select form-select-sm w-auto">Midnight</span>
+                      <span class="form-check mb-0 ms-2 d-none d-sm-block"
+                        ><input checked class="form-check-input" type="checkbox" /><span class="form-check-label">All day</span></span
+                      >
+                    </div>
+                    <div class="list-group-item d-flex align-items-center gap-2">
+                      <span class="flex-fill">Thursday</span>
+                      <span class="form-select form-select-sm w-auto">12:00 AM</span>
+                      <span>to</span>
+                      <span class="form-select form-select-sm w-auto">Midnight</span>
+                      <span class="form-check mb-0 ms-2 d-none d-sm-block"
+                        ><input checked class="form-check-input" type="checkbox" /><span class="form-check-label">All day</span></span
+                      >
+                    </div>
+                    <div class="list-group-item d-flex align-items-center gap-2">
+                      <span class="flex-fill">Friday</span>
+                      <span class="form-select form-select-sm w-auto">12:00 AM</span>
+                      <span>to</span>
+                      <span class="form-select form-select-sm w-auto">Midnight</span>
+                      <span class="form-check mb-0 ms-2 d-none d-sm-block"
+                        ><input checked class="form-check-input" type="checkbox" /><span class="form-check-label">All day</span></span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-body-tertiary border-top border-bottom">
+        <div class="container">
+          <h2 class="display-6 fw-bold mb-5">And the little things</h2>
+          <div class="row g-4">
+            <div class="col-lg-8">
+              <div class="card feature-card h-100">
+                <div class="card-body p-4 d-flex flex-column flex-md-row align-items-md-center gap-4">
+                  <div class="flex-fill">
+                    <h3 class="h5 fw-bold">Lock a tab, or a whole window</h3>
+                    <p class="card-text">
+                      Locked tabs stay open no matter how long they sit. Lock a window and every tab
+                      in it stays too, including ones you open later.
+                    </p>
+                  </div>
+                  <svg class="doodle guard" viewBox="0 0 360 170" aria-hidden="true">
+                    <path d="M40 34 L48 12 Q50 6 57 6 L103 6 Q110 6 112 12 L120 34" style="fill: var(--bs-success)" stroke="#000" stroke-width="6" stroke-linejoin="round" />
+                    <path d="M124 34 L132 12 Q134 6 141 6 L187 6 Q194 6 196 12 L204 34" style="fill: var(--bs-orange)" stroke="#000" stroke-width="6" stroke-linejoin="round" />
+                    <rect x="20" y="32" width="250" height="130" rx="14" fill="#fff" stroke="#000" stroke-width="7" />
+                    <path class="tube" stroke="#000" stroke-width="7" d="M46 70 h130 M46 96 h170 M46 122 h100" />
+                    <path d="M258 92 V74 a30 30 0 0 1 60 0 V92" fill="none" stroke="#000" stroke-width="14" stroke-linecap="round" />
+                    <rect x="240" y="88" width="96" height="72" rx="12" style="fill: var(--bs-warning)" stroke="#000" stroke-width="7" />
+                    <circle cx="288" cy="116" r="9" />
+                    <path d="M288 120 v18" stroke="#000" stroke-width="7" stroke-linecap="round" />
+                    <path class="tube" stroke="#000" stroke-width="7" d="M344 74 l10 -8 M348 104 h10 M344 134 l10 8" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="card feature-card h-100">
+                <div class="card-body p-4">
+                  <div class="blob mb-3" style="background: var(--bs-primary)">
+                    <i class="fa-solid fa-hourglass-half"></i>
+                    <svg class="ticks" aria-hidden="true"><use href="#tick-marks" /></svg>
+                  </div>
+                  <h3 class="h5 fw-bold">See what's next to go</h3>
+                  <p class="card-text">The popup shows how long each open tab has left.</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="card feature-card h-100">
+                <div class="card-body p-4">
+                  <div class="blob mb-3" style="background: var(--bs-pink)">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <svg class="ticks" aria-hidden="true"><use href="#tick-marks" /></svg>
+                  </div>
+                  <h3 class="h5 fw-bold">Keep a few around</h3>
+                  <p class="card-text">
+                    Nothing closes until a window has more than 20 tabs. Pick your own number, or
+                    count across all windows.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="card feature-card h-100">
+                <div class="card-body p-4">
+                  <div class="blob mb-3" style="background: var(--bs-success)">
+                    <i class="fa-solid fa-pause"></i>
+                    <svg class="ticks" aria-hidden="true"><use href="#tick-marks" /></svg>
+                  </div>
+                  <h3 class="h5 fw-bold">Pause any time</h3>
+                  <p class="card-text">
+                    Stop every timer with one click. Timers can also stop on their own while you're
+                    away from the computer.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+              <div class="card feature-card h-100">
+                <div class="card-body p-4">
+                  <div class="blob mb-3" style="background: var(--bs-orange)">
+                    <i class="fa-solid fa-bolt"></i>
+                    <svg class="ticks" aria-hidden="true"><use href="#tick-marks" /></svg>
+                  </div>
+                  <h3 class="h5 fw-bold">Wrangle now</h3>
+                  <p class="card-text">
+                    Don't feel like waiting? Close the oldest stale tabs right away.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card feature-card h-100">
+                <div class="card-body p-4">
+                  <div class="blob mb-3" style="background: #fff">
+                    <i class="fa-solid fa-arrow-pointer"></i>
+                    <svg class="ticks" aria-hidden="true"><use href="#tick-marks" /></svg>
+                  </div>
+                  <h3 class="h5 fw-bold">Right-click a page</h3>
+                  <p class="card-text">
+                    Close it, never close it, or never close anything on that site, all without
+                    opening the popup.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card feature-card h-100">
+                <div class="card-body p-4">
+                  <div class="blob mb-3" style="background: var(--bs-warning)">
+                    <i class="fa-solid fa-rotate"></i>
+                    <svg class="ticks" aria-hidden="true"><use href="#tick-marks" /></svg>
+                  </div>
+                  <h3 class="h5 fw-bold">Your settings, everywhere</h3>
+                  <p class="card-text">
+                    Settings sync through your browser account. Export a backup file and restore it
+                    on any computer.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <div class="row g-5">
+            <div class="col-lg-5">
+              <h2 class="display-6 fw-bold">It doesn't look inside your tabs</h2>
+            </div>
+            <div class="col-lg-7">
+              <p class="lead">
+                Tab Wrangler reads each tab's title and address so it can show them to you and match
+                your rules. It can't read what's on the page, and nothing about you or your browsing
+                is sent anywhere.
+              </p>
+              <ul class="list-unstyled d-flex flex-wrap gap-3 gap-sm-4 my-4 fw-semibold">
+                <li><i class="fa-solid fa-ban text-danger me-2"></i>No tracking</li>
+                <li><i class="fa-solid fa-ban text-danger me-2"></i>No analytics</li>
+                <li><i class="fa-solid fa-ban text-danger me-2"></i>No ads</li>
+              </ul>
+              <p class="mb-0">
+                It's free and open source under the GPLv3, built in the open on
+                <a href="https://github.com/tabwrangler/tabwrangler">GitHub</a>, and translated by
+                volunteers on <a href="https://crowdin.com/project/tab-wrangler">Crowdin</a>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="get bg-body text-body pb-4" data-bs-theme="dark" id="get">
+        <div class="container">
+          <div class="row align-items-center g-5 mb-5">
+            <div class="col-lg-6">
+              <h2 class="display-5 fw-bold mb-3">Give your tabs some room.</h2>
+              <p class="lead mb-4">
+                Install Tab Wrangler, and the next tab you forget will be waiting for you in the
+                Corral.
+              </p>
+              <div class="stores d-flex flex-wrap gap-2">
+                <a
+                  class="btn btn-primary btn-lg"
+                  data-store="chrome"
+                  href="https://chromewebstore.google.com/detail/tab-wrangler/egnjhciaieeiiohknchakcodbpgjnchh"
+                  ><i class="fa-brands fa-chrome me-2"></i>Add to Chrome</a
+                >
+                <a
+                  class="btn btn-secondary btn-lg"
+                  data-store="firefox"
+                  href="https://addons.mozilla.org/firefox/addon/tabwrangler/"
+                  ><i class="fa-brands fa-firefox-browser me-2"></i>Add to Firefox</a
+                >
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <svg
+                class="doodle chalk mx-auto"
+                style="max-width: 460px"
+                viewBox="0 0 400 310"
+                role="img"
+                aria-label="A chalk drawing of three tabs resting in a fenced corral under a crescent moon."
+              >
+                <use href="#tab" x="52" y="140" width="104" height="84" style="color: var(--bs-body-bg)" transform="rotate(-6 104 182)" />
+                <use href="#tab" x="150" y="128" width="104" height="84" style="color: var(--bs-body-bg)" />
+                <use href="#tab" x="248" y="142" width="104" height="84" style="color: var(--bs-body-bg)" transform="rotate(7 300 184)" />
+                <rect x="24" y="204" width="362" height="52" style="fill: var(--bs-body-bg)" />
+                <path class="tube" stroke="#000" stroke-width="22" d="M40 172 V292 M150 172 V292 M260 172 V292 M370 172 V292 M24 204 H386 M24 256 H386" />
+                <path class="tube paper" stroke-width="9" d="M40 172 V292 M150 172 V292 M260 172 V292 M370 172 V292 M24 204 H386 M24 256 H386" />
+                <path d="M352 20 A34 34 0 1 0 380 72 A28 28 0 1 1 352 20 Z" fill="none" stroke="#000" stroke-width="6" stroke-linejoin="round" />
+                <path class="tube" stroke="#000" stroke-width="6" d="M70 30 v20 M60 40 h20 M190 26 v16 M182 34 h16 M290 66 v14 M283 73 h14" />
+              </svg>
+            </div>
+          </div>
+
+          <footer
+            class="d-flex flex-wrap justify-content-between align-items-center gap-3 pt-4 border-top"
+          >
+            <a class="d-flex align-items-center gap-2 fw-semibold text-decoration-none" href="#">
+              <img src="icon.png" alt="" width="32" height="32" class="rounded" />
+              Tab Wrangler
+            </a>
+            <ul class="nav gap-3">
+              <li><a href="https://github.com/tabwrangler/tabwrangler">Source code</a></li>
+              <li><a href="https://github.com/tabwrangler/tabwrangler/releases">Change log</a></li>
+              <li>
+                <a href="https://github.com/tabwrangler/tabwrangler#privacy-policy">Privacy policy</a>
+              </li>
+              <li><a href="https://github.com/tabwrangler/tabwrangler/issues">Support</a></li>
+            </ul>
+          </footer>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      // Lead with the store for the browser the visitor is using.
+      if (/firefox/i.test(navigator.userAgent)) {
+        for (const stores of document.querySelectorAll(".stores")) {
+          const chrome = stores.querySelector('[data-store="chrome"]');
+          const firefox = stores.querySelector('[data-store="firefox"]');
+          stores.prepend(firefox);
+          firefox.classList.replace("btn-secondary", "btn-primary");
+          chrome.classList.replace("btn-primary", "btn-secondary");
+        }
+      }
+    </script>
+  </body>
+</html>

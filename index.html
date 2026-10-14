@@ -371,9 +371,9 @@
           Tab Wrangler
         </a>
         <ul class="navbar-nav ms-auto align-items-center gap-2">
-          <li class="nav-item d-none d-md-block"><a class="nav-link" href="#how">How it works</a></li>
+          <li class="nav-item d-none d-md-block"><a class="nav-link" href="#how">How it Works</a></li>
           <li class="nav-item d-none d-md-block">
-            <a class="nav-link" href="https://github.com/tabwrangler/tabwrangler">Source code</a>
+            <a class="nav-link" href="https://github.com/tabwrangler/tabwrangler">Source Code</a>
           </li>
           <li class="nav-item"><a class="btn btn-primary" href="#get">Get Tab Wrangler</a></li>
         </ul>
@@ -386,9 +386,9 @@
           <div class="col-lg-6">
             <h1 class="display-4 fw-bold mb-4">Round up the tabs you forgot about.</h1>
             <p class="lead mb-4">
-              Tab Wrangler is a free extension for Chrome and Firefox. When a tab sits untouched for
-              a while, it closes the tab and keeps it in a list, so you can bring it back with one
-              click.
+              Tab Wrangler is a free, open source extension for Chrome and Firefox. When a tab sits
+              inactive for a while, Tab Wrangler closes it and keeps it in a list so you can
+              bring it back with one click.
             </p>
             <div class="stores d-flex flex-wrap gap-2">
               <a
@@ -398,14 +398,14 @@
                 ><i class="fa-brands fa-chrome me-2"></i>Add to Chrome</a
               >
               <a
-                class="btn btn-secondary btn-lg"
+                class="btn btn-outline-secondary btn-lg"
                 data-store="firefox"
                 href="https://addons.mozilla.org/firefox/addon/tabwrangler/"
                 ><i class="fa-brands fa-firefox-browser me-2"></i>Add to Firefox</a
               >
             </div>
-            <p class="small text-body-secondary mt-3 mb-0">
-              Free and open source. No account, no tracking.
+            <p class="text-body-secondary mt-3 mb-0">
+              No account, no tracking, and no ads.
             </p>
           </div>
 
@@ -496,7 +496,7 @@
                 </div>
                 <div class="card-body">
                   <p class="card-text">
-                    After an hour without a visit, it goes stale. You choose how long that takes.
+                    After an hour <i>(or whatever duration you choose)</i> without a visit, it goes stale.
                   </p>
                 </div>
               </div>
@@ -541,8 +541,8 @@
             <div class="col-lg-5">
               <h2 class="display-6 fw-bold mb-3">Nothing gets lost</h2>
               <p class="lead">
-                Every tab Tab Wrangler closes goes to the Tab Corral. Search it by title or address,
-                sort it by when tabs closed or which site they came from, and restore one tab or a
+                Every tab Tab Wrangler closes goes to the Tab Corral. Search by page title or address,
+                sort by when tabs closed or which site they came from, and restore one tab or a
                 whole handful at once. Changed your mind? Undo.
               </p>
               <p class="mb-0">
@@ -854,8 +854,8 @@
                   </div>
                   <h3 class="h5 fw-bold">Right-click a page</h3>
                   <p class="card-text">
-                    Close it, never close it, or never close anything on that site, all without
-                    opening the popup.
+                    From Tab Wrangler's right-click context menu, close that page, never close it,
+                    or never close anything on that site, all without opening the popup.
                   </p>
                 </div>
               </div>
@@ -897,9 +897,11 @@
                 <li><i class="fa-solid fa-ban text-danger me-2"></i>No ads</li>
               </ul>
               <p class="mb-0">
-                It's free and open source under the GPLv3, built in the open on
-                <a href="https://github.com/tabwrangler/tabwrangler">GitHub</a>, and translated by
-                volunteers on <a href="https://crowdin.com/project/tab-wrangler">Crowdin</a>.
+                It's free and open source under the
+                <a href="https://github.com/tabwrangler/tabwrangler/blob/main/LICENSE.txt">GPLv3 License</a>,
+                built in the open on <a href="https://github.com/tabwrangler/tabwrangler">GitHub</a>,
+                and translated in part by volunteers on
+                <a href="https://crowdin.com/project/tab-wrangler">Crowdin</a>.
               </p>
             </div>
           </div>
@@ -958,10 +960,10 @@
               Tab Wrangler
             </a>
             <ul class="nav gap-3">
-              <li><a href="https://github.com/tabwrangler/tabwrangler">Source code</a></li>
-              <li><a href="https://github.com/tabwrangler/tabwrangler/releases">Change log</a></li>
+              <li><a href="https://github.com/tabwrangler/tabwrangler">Source Code</a></li>
+              <li><a href="https://github.com/tabwrangler/tabwrangler/releases">Change Log</a></li>
               <li>
-                <a href="https://github.com/tabwrangler/tabwrangler#privacy-policy">Privacy policy</a>
+                <a href="https://github.com/tabwrangler/tabwrangler#privacy-policy">Privacy Policy</a>
               </li>
               <li><a href="https://github.com/tabwrangler/tabwrangler/issues">Support</a></li>
             </ul>
@@ -976,9 +978,8 @@
         for (const stores of document.querySelectorAll(".stores")) {
           const chrome = stores.querySelector('[data-store="chrome"]');
           const firefox = stores.querySelector('[data-store="firefox"]');
-          stores.prepend(firefox);
-          firefox.classList.replace("btn-secondary", "btn-primary");
-          chrome.classList.replace("btn-primary", "btn-secondary");
+          firefox.classList.replace("btn-secondary-outline", "btn-primary");
+          chrome.classList.replace("btn-primary", "btn-secondary-outline");
         }
       }
     </script>

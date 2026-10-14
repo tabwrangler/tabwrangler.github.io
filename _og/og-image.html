@@ -1,0 +1,153 @@
+<!doctype html>
+<!--
+  Source for ../og-image.png, the link preview card (og:image). Render it at 1200x630 from the
+  repo root with:
+
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --disable-gpu \
+    --hide-scrollbars --force-device-scale-factor=1 --window-size=1200,630 \
+    --screenshot="$PWD/og-image.png" "file://$PWD/_og/og-image.html"
+
+  The leading underscore keeps Jekyll from publishing this directory.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #fff;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        color: #000;
+      }
+
+      .card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        width: 1200px;
+        height: 630px;
+        box-sizing: border-box;
+        padding: 0 36px;
+      }
+
+      .copy {
+        flex: none;
+        width: 600px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 62px;
+        font-weight: 600;
+        margin-bottom: 26px;
+      }
+
+      /* Pad the icon on a square of its own background color so the mark has room at this size */
+      .brand .icon {
+        display: grid;
+        place-items: center;
+        width: 72px;
+        height: 72px;
+        border-radius: 16px;
+        background: #131926;
+      }
+
+      .brand img {
+        width: 60px;
+        height: 60px;
+      }
+
+      h1 {
+        margin: 0 0 32px;
+        max-width: 530px;
+        font-size: 78px;
+        line-height: 1.05;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .sub {
+        margin: 0;
+        font-size: 44px;
+        line-height: 1.3;
+        color: #495057;
+      }
+
+      .art {
+        flex: none;
+        width: 600px;
+        margin-left: -70px;
+      }
+
+      svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+      }
+
+      .tube {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="copy">
+        <div class="brand"><span class="icon"><img src="../icon.png" alt="" /></span>Tab Wrangler</div>
+        <h1>Automatically close the tabs you forgot about.</h1>
+        <p class="sub">A free extension for<br />Chrome and Firefox</p>
+      </div>
+      <div class="art">
+        <svg viewBox="40 0 600 500">
+          <defs>
+            <symbol id="tab" viewBox="0 0 112 90" overflow="visible">
+              <path d="M6 62 L16 12 Q18 4 26 4 L86 4 Q94 4 96 12 L106 62 Z" fill="currentColor" stroke="#000" stroke-width="7" stroke-linejoin="round" />
+              <circle cx="32" cy="28" r="7" />
+              <path d="M68 22 l14 14 M82 22 l-14 14" stroke="#000" stroke-width="6" stroke-linecap="round" />
+              <path d="M34 66 L28 86 M78 66 L84 86" stroke="#000" stroke-width="8" stroke-linecap="round" />
+            </symbol>
+          </defs>
+
+          <use href="#tab" x="352" y="222" width="104" height="84" style="color: #0d6efd" transform="rotate(8 404 264)" />
+          <use href="#tab" x="500" y="208" width="104" height="84" style="color: #198754" transform="rotate(12 552 250)" />
+          <use href="#tab" x="420" y="326" width="104" height="84" style="color: #fff" transform="rotate(6 472 368)" />
+          <use href="#tab" x="540" y="340" width="96" height="77" style="color: #d63384" transform="rotate(10 588 378)" />
+          <use href="#tab" x="330" y="418" width="92" height="74" style="color: #fd7e14" transform="rotate(4 376 455)" />
+
+          <path class="tube" stroke="#000" stroke-width="13" d="M128 334 L114 382 M232 334 L264 370 M96 262 L60 282 M262 252 L300 222 L318 160" />
+          <path d="M80 330 L104 214 Q108 200 122 200 L238 200 Q252 200 256 214 L280 330 Z" fill="#dc3545" stroke="#000" stroke-width="9" stroke-linejoin="round" />
+          <circle cx="132" cy="250" r="12" />
+          <path class="tube" stroke="#000" stroke-width="10" d="M206 238 l24 24 M230 238 l-24 24" />
+          <path d="M132 196 Q126 146 150 142 Q180 154 210 142 Q234 146 228 196 Z" fill="#ffc107" stroke="#000" stroke-width="9" stroke-linejoin="round" />
+          <path class="tube" stroke="#000" stroke-width="26" d="M84 184 Q180 222 276 184" />
+          <path class="tube" stroke="#ffc107" stroke-width="10" d="M84 184 Q180 222 276 184" />
+
+          <g transform="rotate(-6 440 84)">
+            <path class="tube" stroke="#000" stroke-width="22" d="M318 160 C 326 130, 318 112, 330 96" />
+            <path class="tube" stroke="#fff" stroke-width="10" d="M318 160 C 326 130, 318 112, 330 96" />
+            <path class="tube" stroke="#000" stroke-width="22" d="M322 84 A118 34 0 1 1 558 84 A118 34 0 1 1 322 84" />
+            <path class="tube" stroke="#fff" stroke-width="10" d="M322 84 A118 34 0 1 1 558 84 A118 34 0 1 1 322 84" />
+          </g>
+
+          <g class="tube" stroke="#000" stroke-width="8">
+            <path d="M338 240 h-20 M334 258 h-24 M338 276 h-18" />
+            <path d="M486 226 h-20 M482 244 h-24 M486 262 h-16" />
+            <path d="M406 344 h-20 M402 362 h-24 M406 380 h-16" />
+            <path d="M316 436 h-20 M312 454 h-22" />
+            <path d="M578 52 l18 -8 M584 80 l20 2 M300 50 l-16 -10" />
+            <path d="M72 200 l-16 -12 M62 232 l-20 -4" />
+          </g>
+        </svg>
+      </div>
+    </div>
+  </body>
+</html>

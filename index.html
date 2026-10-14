@@ -8,7 +8,25 @@
       name="description"
       content="Tab Wrangler is a free extension for Chrome and Firefox that closes tabs you haven't used in a while and makes it easy to get them back."
     />
+    <link rel="canonical" href="https://tabwrangler.com/" />
     <link rel="icon" href="icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Tab Wrangler" />
+    <meta property="og:url" content="https://tabwrangler.com/" />
+    <meta property="og:title" content="Tab Wrangler" />
+    <meta
+      property="og:description"
+      content="A free extension for Chrome and Firefox that closes tabs you haven't used in a while and makes it easy to get them back."
+    />
+    <meta property="og:image" content="https://tabwrangler.com/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="A browser tab in a cowboy hat swings a lasso over a herd of tabs, next to the words: Automatically close the tabs you forgot about."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
     <script>
       // Follow the system theme, like the extension's "System" theme setting.
       const darkQuery = matchMedia("(prefers-color-scheme: dark)");
@@ -157,8 +175,11 @@
       }
 
       .step-warning {
-        /* Darker than Bootstrap's yellow so white lines and fills keep at least 3:1 */
-        background: #b38605;
+        /* White lines vanish on yellow, so this card keeps the light theme's black lines and
+           white fills in dark mode too */
+        --line: #000;
+        --paper: #fff;
+        background: var(--bs-warning);
       }
       .step-danger {
         background: var(--bs-danger);
